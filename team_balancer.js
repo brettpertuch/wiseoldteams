@@ -1,4 +1,4 @@
-var url = "https://api.wiseoldman.net/players/track";
+var api_url = "https://api.wiseoldman.net/players/track";
 
 //console.log(pvm_scale);
 
@@ -8,37 +8,41 @@ let numUsers = 0;
 async function sendPlayerDataPromise(playerList) {
 	let promises = [];
 	let aborted = false;
-	for (player in playerList) {
-		document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
-		let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
-		let xhr = new XMLHttpRequest();
-		xhr.open("POST", url);
-		xhr.setRequestHeader("Content-Type", "application/json");
-		const promise = new Promise((resolve, reject) => {
-			xhr.onreadystatechange = function () {
-				if (xhr.readyState === 4) {
-					if ([200, 201].includes(xhr.status)) {
-						let username = JSON.parse(xhr.responseText).displayName;
-						let res = JSON.parse(xhr.responseText);
-						clearInterval(timeout);
-						return resolve(createPlayerObj(username, res));
-					}
-					else {
-						console.log(xhr.responseText);
-						aborted = true;
-						return resolve(undefined);
+	if (playerList.length > 0) {
+		for (player in playerList) {
+			document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
+			let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", api_url);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			const promise = new Promise((resolve, reject) => {
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState === 4) {
+						if ([200, 201].includes(xhr.status)) {
+							let username = JSON.parse(xhr.responseText).displayName;
+							let res = JSON.parse(xhr.responseText);
+							clearInterval(timeout);
+							return resolve(createPlayerObj(username, res));
+						}
+						else {
+							console.log(xhr.responseText);
+							aborted = true;
+							return resolve(undefined);
+						}
 					}
 				}
-			}
-		});
-		xhr.send(data);
-		const timeout = setTimeout(() => {
-			aborted = true;
-			xhr.abort();
-		}, 5000);
-		
-		promises.push(promise);
+			});
+			xhr.send(data);
+			const timeout = setTimeout(() => {
+				aborted = true;
+				xhr.abort();
+			}, 5000);
+			
+			promises.push(promise);
+		}
 	}
+	else
+		aborted = true;
 	
 	if (aborted)
 		return -1, "Process aborted!", [];
@@ -563,7 +567,7 @@ function getButtonTeams() {
 			createFinalTeamTable(teams);
 		}
 		else {
-			document.getElementById("infoPanel").innerHTML = "Process failed! " + value[1];
+			document.getElementById("infoPanel").innerHTML = "Process failed!";
 		}
 		
 	}).catch(e => console.log(e));
