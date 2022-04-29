@@ -7,7 +7,7 @@ var pvm_scale = {
 "Inferno":["tzkal_zuk"]
 };
 
-var pvm_scale2 = {
+/*var pvm_scale2 = {
 	"gwd":["commander_zilyana", "general_graardor", "kreearra", "kril_tsutsaroth", "nex"],
 	"slayer_bosses":["abyssal_sire", "alchemical_hydra", "cerberus", "grotesque_guardians", "kraken", "thermonuclear_smoke_devil"],
 	"wildy_bosses":["chaos_fanatic", "crazy_archaeologist", "callisto", "chaos_elemental", "scorpia", "venenatis", "vetion"],
@@ -21,4 +21,20 @@ var pvm_scale2 = {
 	"theatre_of_blood":["theatre_of_blood"],
 	"theatre_of_blood_hard_mode":["theatre_of_blood_hard_mode"],
 	"inferno":["tzkal_zuk"]
+};*/
+
+var pvm_scale2 = {
+	"gwd":{"bosses":["commander_zilyana", "general_graardor", "kreearra", "kril_tsutsaroth", "nex"], "label":"GWD"},
+	"slayer_bosses":{"bosses":["abyssal_sire", "alchemical_hydra", "cerberus", "grotesque_guardians", "kraken", "thermonuclear_smoke_devil"], "label":"Slayer Bosses"},
+	"wildy_bosses":{"bosses":["chaos_fanatic", "crazy_archaeologist", "callisto", "chaos_elemental", "scorpia", "venenatis", "vetion"], "label":"Wildy Bosses"},
+	"nightmare":{"bosses":["nightmare"], "label":"Nightmare"},
+	"vorkath":{"bosses":["vorkath"], "label":"Vorkath"},
+	"zulrah":{"bosses":["zulrah"], "label":"Zulrah"},
+	"phosanis_nightmare":{"bosses":["phosanis_nightmare"], "label":"Phosani's Nightmare"},
+	"the_corrupted_gauntlet":{"bosses":["the_corrupted_gauntlet"], "label":"Corrupted Gauntlet"},
+	"chambers_of_xeric":{"bosses":["chambers_of_xeric"], "label":"Chambers of Xeric"},
+	"chambers_of_xeric_challenge_mode":{"bosses":["chambers_of_xeric_challenge_mode"], "label":"Chambers of Xeric: Challenge Mode"},
+	"theatre_of_blood":{"bosses":["theatre_of_blood"], "label":"Theatre of Blood"},
+	"theatre_of_blood_hard_mode":{"bosses":["theatre_of_blood_hard_mode"], "label":"Theatre of Blood: Hard Mode"},
+	"inferno":{"bosses":["tzkal_zuk"], "label":"Inferno"}
 };

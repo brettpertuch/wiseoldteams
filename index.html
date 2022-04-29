@@ -1,49 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="pvm_scale.js"></script>
-<script type="text/javascript" src="team_balancer.js"></script>
+	<title>Wise Old Teams</title>
 </head>
 <style>
 .playerContainer {
-	background-color: #2196F3;
-	padding: 10px;
+	background-color: #FFFFFF;
+	//padding: 10px;
+	//height: 500px;
+	overflow: scroll;
+}
+.playerTextBox {
+	font-size: 20px;
+	background-color: #e9f5f9;
+	margin: 2px 0px 2px 0px;
+	//border: 1px solid #000000;
+	border-top: 1px solid #000000;
+	border-bottom: 1px solid #000000;
+	border-right: 1px solid #000000;
+	border-left: 0px;
+	//border-width: 0px;
+	//height: 25px;
+	//display: inline-block;
+	//line-height: 1.5
+}
+.playerRemoveButton {
+	background-color: #2596be;
+	margin: 2px 0px 2px 0px;
+	//border-width: 0px;
+	//border: none;
+	border: 1px solid #000000;
+	color: white;
+	//height: 30px;
+	//text-align: center;
+	//text-decoration: none;
+	//display: inline-block;
+	font-size: 20px;
+	//line-height: 1.5
 }
 table, th, td {
-  border:1px solid black;
-  border-collapse: collapse;
-  padding: 5px;
+	border:1px solid black;
+	border-collapse: collapse;
+	padding: 5px;
 }
-table {
-	table-layout:fixed;
+.header {
+	//padding: 5px;
+	text-align: left;
+	background: #1abc9c;
+	color: white;
+	height: 120px;
+	font-size: 18px;
 }
+.teamTableCell {
+	height: 20px;
+}
+.teamTable {
+	//margin-bottom: 456px;
+}
+
 </style>
 <body>
-
-<table>
-	<tr>
-		<td colspan="3">
-			<div id="playerContainer"></div>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<button onclick="createUserInput()">Add Player</button>
-		</td>
-		<td>
-			<label for="cteamSizeSelect"># of Teams:</label>
-			<select name="teamSizeSelect" id="teamSizeSelect">
-				<option value="1">1</option>
-			</select>
-		</td>
-		<td>
-			<button id='createButton' onclick="getButtonTeams()">Create Teams</button>
-		</td>
-	</tr>
-	<tr>
-		<table id="finalTeamTable">
-		</table>
-	</tr>
-</table>
+	<div class="header">
+		<h1>Wise Old Teams</h1>
+		<h3>Open-Source OSRS Team Creator and Balancing Tool using <a href="https://wiseoldman.net/">Wise Old Man</a> Data</h3>
+	</div>
+	<table>
+		<tr>
+			<td>
+				<h3>Player Entries</h3>
+				<p>Ensure to enter the players' exact username</p>
+				<div id="playerContainer" class=playerContainer></div>
+				<button onclick="createUserInput()">Add Player</button>
+			</td>
+			<td>
+				<h3>Activity Weighting</h3>
+				<p>Use the sliders to make certain activities matter more or less in team creation.</p>
+				<table id="sliderContainer"></table>
+			</td>
+			<td>
+				<h3>Final Teams</h3>
+				<label for="cteamSizeSelect"># of Teams:</label>
+				<select name="teamSizeSelect" id="teamSizeSelect">
+					<option value="1">1</option>
+				</select>
+				<!--<table id="teamNameTable"></table>-->
+				<table id="finalTeamTable" class="teamTable"></table>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<button id="createButton" onclick="getButtonTeams()">Create Teams</button>
+				<label id="infoPanel"></label>
+			</td>
+		</tr>
+	</table>
 </body>
+<script type="text/javascript" src="pvm_scale.js"></script>
+<script type="text/javascript" src="team_balancer.js"></script>
 </html>

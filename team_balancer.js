@@ -4,99 +4,52 @@ var url = "https://api.wiseoldman.net/players/track";
 
 let numUsers = 0;
 
-//let players = [];
-
-/*function sendPlayerData(playerList, players) {
-	if (players === undefined)
-		players = [];
-	for (var player in playerList) {
-		if (!findPlayerinList(playerList[player].toLowerCase(), players)) {
-			var data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
-			let xhr = new XMLHttpRequest();
-			xhr.open("POST", url, false);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			xhr.onreadystatechange = function () {
-			if (xhr.readyState === 4) {
-				console.log(xhr.status);
-				if ([200, 201].includes(xhr.status)) {
-					//console.log(xhr.responseText);
-					let username = JSON.parse(xhr.responseText).displayName;
-					let res = JSON.parse(xhr.responseText);
-					players.push(createPlayerObj(username, res));
-				}
-			}};
-			xhr.send(data);
-		}
-	}
-	return players;
-}*/
 
 async function sendPlayerDataPromise(playerList) {
 	let promises = [];
+	let aborted = false;
 	for (player in playerList) {
-		var data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
+		document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
+		let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
 		let xhr = new XMLHttpRequest();
 		xhr.open("POST", url);
-		//xhr.setRequestHeader("Origin", "https://api.wiseoldman.net");
 		xhr.setRequestHeader("Content-Type", "application/json");
 		const promise = new Promise((resolve, reject) => {
 			xhr.onreadystatechange = function () {
 				if (xhr.readyState === 4) {
-					console.log(xhr.status);
-					//console.log(xhr.responseText);
 					if ([200, 201].includes(xhr.status)) {
-						//console.log(xhr.responseText);
 						let username = JSON.parse(xhr.responseText).displayName;
 						let res = JSON.parse(xhr.responseText);
-						//players.push(createPlayerObj(username, res));
-						//return res;
-						return resolve(xhr.responseTex);
-						//return resolve(createPlayerObj(username, res));
+						clearInterval(timeout);
+						return resolve(createPlayerObj(username, res));
 					}
 					else {
 						console.log(xhr.responseText);
+						aborted = true;
 						return resolve(undefined);
 					}
 				}
 			}
 		});
 		xhr.send(data);
+		const timeout = setTimeout(() => {
+			aborted = true;
+			xhr.abort();
+		}, 5000);
+		
 		promises.push(promise);
 	}
 	
-	return await Promise.all(promises).then(r => r).catch(error => {console.log(error)});
-	//console.log(result);
-	//return result;
+	if (aborted)
+		return -1, "Process aborted!", [];
+	else
+		return 1, "All Players Loaded!", await Promise.all(promises).then(r => r).catch(error => {console.log(error)});
 
 }
 
-function sendSinglePlayerData(player) {
-	
-}
 
-function sendPlayerData(playerList) {
-	let players = [];
-	for (var player in playerList) {
-		//if (!findPlayerinList(playerList[player].toLowerCase(), players)) {
-			var data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
-			let xhr = new XMLHttpRequest();
-			xhr.open("POST", url, true);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			xhr.onreadystatechange = function () {
-			if (xhr.readyState === 4) {
-				//console.log(xhr.status);
-				if ([200, 201].includes(xhr.status)) {
-					//console.log(xhr.responseText);
-					let username = JSON.parse(xhr.responseText).displayName;
-					let res = JSON.parse(xhr.responseText);
-					players.push(createPlayerObj(username, res));
-				}
-			}};
-			xhr.send(data);
-		//}
-	}
-	return players;
-}
+
+
 
 function createPlayerObj(player_name, response) {
 	jsonRes = response.latestSnapshot;
@@ -107,7 +60,8 @@ function createPlayerObj(player_name, response) {
 		player[key2] = 0;
 	for (const key in jsonRes) {
 		for (const key2 in pvm_scale2) {
-			if (pvm_scale2[key2].includes(key))
+			//console.log(pvm_scale2[key2].bosses);
+			if (pvm_scale2[key2].bosses.includes(key))
 				player[key2] += jsonRes[key].ehb;
 		}
 	}
@@ -125,25 +79,6 @@ function findPlayerinList(name, list) {
 }	
 
 
-/*function sendPlayerDataFake(playerList, players) {
-	if (players === undefined)
-		players = [];
-	for (var player in playerList) {
-		if (!findPlayerinList(playerList[player].toLowerCase(), players)) {
-			const player_obj = {
-				name: playerList[player]
-			};
-			for (const key in pvm_scale2) {
-				player_obj[key] = Math.random() * 1000;
-			}
-			players.push(player_obj);
-		}
-		else
-			console.log("player already in list!");
-	}
-	return players;
-}*/
-
 function sendPlayerDataFake(playerList) {
 	let players = [];
 	for (var player in playerList) {
@@ -152,8 +87,10 @@ function sendPlayerDataFake(playerList) {
 				name: playerList[player]
 			};
 			for (const key in pvm_scale2) {
+				//console.log(key);
 				player_obj[key] = Math.random() * 1000;
 			}
+			//console.log(player_obj);
 			players.push(player_obj);
 		//}
 		//else
@@ -170,6 +107,7 @@ function createFinalTeamTable(teams) {
 	let headerRow = document.createElement("tr");
 	for (let i = 0; i < teams.length; i++) {
 		let thisHeader = document.createElement("th");
+		thisHeader.className = "teamTableCell";
 		thisHeader.innerHTML = "Team " + (i + 1);
 		headerRow.appendChild(thisHeader);
 	}
@@ -178,6 +116,7 @@ function createFinalTeamTable(teams) {
 		let newRow = document.createElement("tr");
 		for (let j = 0; j < teams.length; j++) {
 			let newCol = document.createElement("td");
+			newCol.className = "teamTableCell";
 			if (teams[j].players[i] != undefined)
 				newCol.innerHTML = teams[j].players[i];
 			newRow.appendChild(newCol);
@@ -202,9 +141,76 @@ function removeAllChildNodes(element) {
 		element.removeChild(element.firstChild);
 }
 
+
+function createPVMSliders(pvm_obj) {
+	let container = document.getElementById("sliderContainer");
+	for (index in pvm_obj) {
+		let row = document.createElement("tr");
+		let cell = document.createElement("td");
+		let slider = document.createElement("input");
+		slider.setAttribute("id", index + "-slider");
+		slider.setAttribute("name", "pvmSlider");
+		slider.setAttribute("type", "range");
+		slider.setAttribute("min", "0");
+		slider.setAttribute("max", "100");
+		slider.setAttribute("value", "100");
+		slider.addEventListener("change", function() {
+			updateSliderVal(slider.id.split("-")[0]);
+		});
+		let valLabel = document.createElement("input");
+		valLabel.setAttribute("value", slider.value / 100);
+		valLabel.setAttribute("name", "pvmWeightVal");
+		valLabel.setAttribute("id", slider.id + "-valLabel");
+		valLabel.setAttribute("size", "1");
+		valLabel.addEventListener("change", function() {
+			updateSliderPos(valLabel.id.split("-")[0]);
+		});
+		let label = document.createElement("label");
+		label.setAttribute("for", slider.id);
+		label.innerHTML = "&ensp;" + pvm_scale2[index].label;
+		cell.appendChild(slider);
+		cell.appendChild(valLabel);
+		cell.appendChild(label);
+		row.appendChild(cell);
+		container.appendChild(row);
+	}
+	let height = container.offsetHeight;
+	console.log(height);
+	document.getElementById("playerContainer").style.height = height.toString() + "px";
+	//document.getElementById("finalTeamTable").style.height = height.toString() + "px";
+}
+
+function updateSliderVal(id) {
+	let val = document.getElementById(id + "-slider").value;
+	document.getElementById(id + "-slider-valLabel").value = val / 100;
+}
+
+function updateSliderPos(id) {
+	let val = document.getElementById(id + "-slider-valLabel").value;
+	if (val < 0)
+		val = 0;
+	if (val > 100)
+		val = 100;
+	if (isNaN(val))
+		val = 1;
+	document.getElementById(id + "-slider").value = val * 100;
+	document.getElementById(id + "-slider-valLabel").value = val;
+}
+
+function createWeightObj() {
+	let vals = document.getElementsByName("pvmWeightVal");
+	let weightObj = {};
+	for (let i = 0; i < vals.length; i++) {
+		console.log(vals[i].id, vals[i].value);
+		weightObj[vals[i].id.split("-")[0]] = parseFloat(vals[i].value);
+	}
+	console.log(weightObj);
+	return weightObj;
+}
+
 function createTeamDropdown() {
 	let numUsers = document.getElementById("playerContainer").childElementCount;
-	console.log(numUsers);
+	//console.log(numUsers);
 	let dropdown = document.getElementById("teamSizeSelect");
 	removeAllChildNodes(dropdown);
 	for (let i = 1; i <= numUsers; i++) {
@@ -213,6 +219,25 @@ function createTeamDropdown() {
 		option.innerHTML = i;
 		dropdown.appendChild(option);
 	}
+	/*dropdown.addEventListener("change", function() {
+		createTeamNameInput();
+	});*/
+}
+
+function createTeamNameInput() {
+	let dropdown = document.getElementById("teamSizeSelect");
+	let dropdown_selected = dropdown.options[dropdown.selectedIndex].value;
+	let teamNameTable = document.getElementById("teamNameTable");
+	removeAllChildNodes(teamNameTable);
+	for (let i = 0; i < dropdown_selected; i++) {
+		let row = document.createElement("tr");
+		let cell = document.createElement("td");
+		let textInput = document.createElement("input");
+		textInput.setAttribute("placeholder", "Team " + (i + 1).toString() + " Name");
+		cell.appendChild(textInput);
+		row.appendChild(cell);
+		teamNameTable.appendChild(row);
+	}
 }
 
 function createUserInput() {
@@ -220,6 +245,7 @@ function createUserInput() {
 	const removeButton = document.createElement("input");
 	removeButton.setAttribute("type", "button");
 	removeButton.setAttribute("value", "x");
+	removeButton.className = "playerRemoveButton";
 	const input = document.createElement("input");
 	input.setAttribute("type", "text");
 	numUsers++;
@@ -227,11 +253,21 @@ function createUserInput() {
 	removeButton.onclick = function() { removeUserInput(playerDiv.id); };
 	input.setAttribute("name", "usernameInput");
 	input.setAttribute("id", "usernameInput" + numUsers);
-	input.className = "playerNameBox";
+	//input.setAttribute("placeholder", (numUsers + 1).toString());
+	input.className = "playerTextBox";
+	//removeButton.style.height = (input.style.height).toString() + "px";
 	playerDiv.appendChild(removeButton);
 	playerDiv.appendChild(input);
+	//playerDiv.style.outline = "1px solid #0000FF";
 	document.getElementById("playerContainer").appendChild(playerDiv);
 	createTeamDropdown();
+	let scrollElement = document.getElementById("playerContainer");
+	scrollElement.scrollTop = scrollElement.scrollHeight;
+}
+
+function initUserList(amt) {
+	for (let i = 0; i < amt; i++)
+		createUserInput();
 }
 
 function removeUserInput(id) {
@@ -300,7 +336,7 @@ function printCombination(arr,n,r)
 
 
 
-function sortPlayers(players) {
+function sortPlayers(players, weightObj) {
 	
 	let score_obj = {};
 	for (const key in players[0])
@@ -316,25 +352,23 @@ function sortPlayers(players) {
 	for (const key in score_obj)
 		score_obj[key] /= players.length;
 	
-	console.log(score_obj);
+	//console.log(score_obj);
 	
 	for (let i = 0; i < players.length; i++)
 		players[i].tot_score = 0;
 	for (let i = 0; i < players.length; i++) {
 		let tot = 0;
 		for (const key in score_obj) {
-			//console.log(players[i][key]);
-			//console.log(score_obj[key]);
-			//console.log(key + " -> " + players[i][key]);
-			//console.log(key + " -> " + score_obj[key]);
-			if (score_obj[key] != 0)
-				tot += players[i][key] / score_obj[key];
+			if (score_obj[key] != 0) {
+				if (key in weightObj)
+					tot += (players[i][key] / score_obj[key]) * weightObj[key];
+				else
+					tot += (players[i][key] / score_obj[key]);
+			}
 			else
 				tot += 0;
 		}
-			//tot += (players[i][key] - score_obj[key]) * (1/Object.keys(score_obj).length);
 		players[i].tot_score = tot;
-		//players[i].tot_score = 1000;
 	}
 	
 	//console.log(players);
@@ -491,37 +525,48 @@ function getPlayerAvg(players) {
 let in_arr = ['Brett P'];
 
 //let arr=sendPlayerData(in_arr);
-let arr = sendPlayerDataFake(in_arr);
-let r = 2;
-let n = arr.length;
+//let arr = sendPlayerDataFake(in_arr);
+//let r = 2;
+//let n = arr.length;
 
 //let player_avg = getPlayerAvg(arr);
 //console.log(player_avg);
 
+createPVMSliders(pvm_scale2);
+initUserList(5);
+
 function getButtonTeams() {
-	disableCreate(document.getElementById('createButton'), 10);
-	let numTeams = document.getElementById("teamSizeSelect").value;
-	//let players = sendPlayerDataFake(getPlayerNames());
-	//let players = sendPlayerData(getPlayerNames());
-	//let players = sendPlayerDataPromise(getPlayerNames());
-	//console.log(players);
 	
+	//Use for fake data
+	/*disableCreate(document.getElementById('createButton'), 60);
+	let pvm_weights = createWeightObj();
+	console.log(pvm_weights);
+	let numTeams = document.getElementById("teamSizeSelect").value;
+	let players = sendPlayerDataFake(getPlayerNames());
+	console.log(players);
+	let sortedPlayers = sortPlayers(players, pvm_weights);
+	console.log(sortedPlayers);
+	let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
+	createFinalTeamTable(teams);*/
+	
+	
+	//Use for real Data
+	disableCreate(document.getElementById('createButton'), 60);
 	sendPlayerDataPromise(getPlayerNames()).then(value => {
-		//let players = value;
-		console.log(value);
-		//let sortedPlayers = sortPlayers(value);
-		//console.log(sortedPlayers);
-		//let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
-		//createFinalTeamTable(teams);
+		if (value[0] == 1) {
+			document.getElementById("infoPanel").innerHTML = "Players successfully loaded!";
+			let pvm_weights = createWeightObj();
+			let numTeams = document.getElementById("teamSizeSelect").value;
+			let sortedPlayers = sortPlayers(value[2], pvm_weights);
+			console.log(sortedPlayers);
+			let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
+			createFinalTeamTable(teams);
+		}
+		else {
+			document.getElementById("infoPanel").innerHTML = "Process failed! " + value[1];
+		}
 		
 	}).catch(e => console.log(e));
-	//console.log(players);
-	
-	//
-	//console.log(sortedPlayers);
-	//let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
-	//console.log(teams);
-	//createFinalTeamTable(teams);
 	
 	
 	
