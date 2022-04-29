@@ -1,58 +1,48 @@
 var api_url = "https://api.wiseoldman.net/players/track";
-
-//console.log(pvm_scale);
-
 let numUsers = 0;
 
 
 async function sendPlayerDataPromise(playerList) {
 	let promises = [];
 	let aborted = false;
-	if (playerList.length > 0) {
-		for (player in playerList) {
-			document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
-			let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
-			let xhr = new XMLHttpRequest();
-			xhr.open("POST", api_url);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			const promise = new Promise((resolve, reject) => {
-				xhr.onreadystatechange = function () {
-					if (xhr.readyState === 4) {
-						if ([200, 201].includes(xhr.status)) {
-							let username = JSON.parse(xhr.responseText).displayName;
-							let res = JSON.parse(xhr.responseText);
-							clearInterval(timeout);
-							return resolve(createPlayerObj(username, res));
-						}
-						else {
-							console.log(xhr.responseText);
-							aborted = true;
-							return resolve(undefined);
-						}
+	for (player in playerList) {
+		document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
+		let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
+		let xhr = new XMLHttpRequest();
+		xhr.open("POST", api_url);
+		xhr.setRequestHeader("Content-Type", "application/json");
+		const promise = new Promise((resolve, reject) => {
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4) {
+					if ([200, 201].includes(xhr.status)) {
+						let username = JSON.parse(xhr.responseText).displayName;
+						let res = JSON.parse(xhr.responseText);
+						clearInterval(timeout);
+						return resolve(createPlayerObj(username, res));
+					}
+					else {
+						console.log(xhr.responseText);
+						aborted = true;
+						return resolve(undefined);
 					}
 				}
-			});
-			xhr.send(data);
-			const timeout = setTimeout(() => {
-				aborted = true;
-				xhr.abort();
-			}, 5000);
-			
-			promises.push(promise);
-		}
+			}
+		});
+		xhr.send(data);
+		const timeout = setTimeout(() => {
+			aborted = true;
+			xhr.abort();
+		}, 5000);
+		
+		promises.push(promise);
 	}
-	else
-		aborted = true;
 	
 	if (aborted)
-		return -1, "Process aborted!", [];
+		return [];
 	else
-		return 1, "All Players Loaded!", await Promise.all(promises).then(r => r).catch(error => {console.log(error)});
+		return await Promise.all(promises).then(r => r).catch(error => {console.log(error)});
 
 }
-
-
-
 
 
 function createPlayerObj(player_name, response) {
@@ -102,6 +92,7 @@ function sendPlayerDataFake(playerList) {
 	}
 	return players;
 }
+
 
 function createFinalTeamTable(teams) {
 	//let teams = teams.slice();
@@ -179,7 +170,7 @@ function createPVMSliders(pvm_obj) {
 		container.appendChild(row);
 	}
 	let height = container.offsetHeight;
-	console.log(height);
+	//console.log(height);
 	document.getElementById("playerContainer").style.height = height.toString() + "px";
 	//document.getElementById("finalTeamTable").style.height = height.toString() + "px";
 }
@@ -205,10 +196,10 @@ function createWeightObj() {
 	let vals = document.getElementsByName("pvmWeightVal");
 	let weightObj = {};
 	for (let i = 0; i < vals.length; i++) {
-		console.log(vals[i].id, vals[i].value);
+		//console.log(vals[i].id, vals[i].value);
 		weightObj[vals[i].id.split("-")[0]] = parseFloat(vals[i].value);
 	}
-	console.log(weightObj);
+	//console.log(weightObj);
 	return weightObj;
 }
 
@@ -286,58 +277,9 @@ function getPlayerNames() {
 		if (elements[i].value != "")
 			names.push(elements[i].value.toLowerCase());
 	}
-	console.log(names);
+	//console.log(names);
 	return names;
 }
-
-
-
-
-/* arr[]  ---> Input Array
-data[] ---> Temporary array to store current combination
-start & end ---> Starting and Ending indexes in arr[]
-index  ---> Current index in data[]
-r ---> Size of a combination to be printed */
-let teamList = [];
-function combinationUtil(arr,data,start,end,index,r)
-{
-	// Current combination is ready to be printed, print it
-	if (index == r)
-	{
-		let out_arr = [];
-		let tot_score = 0;
-		for (let j=0; j<r; j++)
-		{
-			out_arr.push(data[j].name);
-			tot_score += data[j].raids;
-		}
-		let team = [out_arr, Math.abs((tot_score / out_arr.length) - player_avg)];
-		//teamList.push(team);
-		//console.log(team);
-	}
-	 
-	// replace index with all possible elements. The condition
-	// "end-i+1 >= r-index" makes sure that including one element
-	// at index will make a combination with remaining elements
-	// at remaining positions
-	for (let i=start; i<=end && end-i+1 >= r-index; i++)
-	{
-		data[index] = arr[i];
-		combinationUtil(arr, data, i+1, end, index+1, r);
-	}
-}
- 
-// The main function that prints all combinations of size r
-// in arr[] of size n. This function mainly uses combinationUtil()
-function printCombination(arr,n,r)
-{
-	// A temporary array to store all combination one by one
-	let data = new Array(r);
-	 
-	// Print all combination using temporary array 'data[]'
-	combinationUtil(arr, data, 0, n-1, 0, r);
-}
-
 
 
 function sortPlayers(players, weightObj) {
@@ -402,68 +344,6 @@ function disableCreate(disableTarget, secsDisabled) {
 	}, 1000);
 }
 
-function pickTeams(sortedTeams, playerList) {
-	let used = [];
-	let final_teams = [];
-	for (team in sortedTeams) {
-		let temp_team = sortedTeams[team][0];
-		//console.log("checking team " + temp_team);
-		let found_player_in_team = false;
-		for (let i = 0; i < temp_team.length; i++) {
-			//console.log("checking player: " + temp_team[i]);
-			if (used.includes(temp_team[i])) {
-				//console.log(temp_team[i] + " is already in another team");
-				found_player_in_team = true;
-			}
-		}
-		if (!found_player_in_team) {
-			final_teams.push(temp_team);
-			for (let i = 0; i < temp_team.length; i++)
-				used.push(temp_team[i]);
-		}
-	}
-	console.log(final_teams);
-}
-
-function pickTeamsRR(sortedPlayers, teamSize) {
-	let c = 0;
-	let final_teams = [];
-	for (let i = 0; i < teamSize; i++)
-		final_teams[i] = {players:[], score:0};
-	for (i = 0; i < sortedPlayers.length; i++) {
-		final_teams[c].players.push(sortedPlayers[i].name);
-		final_teams[c].score += sortedPlayers[i].raids;
-		if (c < teamSize - 1)
-			c++;
-		else
-			c = 0;
-	}
-	console.log(final_teams);
-}
-
-function pickTeamsRRPlus(sortedPlayers, teamSize) {
-	let final_teams = [];
-	let topptr = 0;
-	let bottomptr = sortedPlayers.length - 1;
-	let dist = 1000;
-	let c = 0;
-	for (let i = 0; i < teamSize; i++)
-		final_teams[i] = {players:[], score:0};
-	while (dist > 1) {
-		dist = Math.abs(topptr - bottomptr);
-		final_teams[c].players.push(sortedPlayers[topptr].name);
-		final_teams[c].score += sortedPlayers[topptr].raids;
-		final_teams[c].players.push(sortedPlayers[bottomptr].name);
-		final_teams[c].score += sortedPlayers[bottomptr].raids;
-		topptr++;
-		bottomptr--;
-		if (c < teamSize - 1)
-			c++;
-		else
-			c = 0;
-	}
-	console.log(final_teams);
-}
 
 function getSmallestBucket(buckets, teamSize) {
 	let smallestIndex = 0;
@@ -525,17 +405,6 @@ function getPlayerAvg(players) {
 }
 
 
-//let in_arr = ['dw guns', 'denglish', 'dr moko', 'brett p', 'bape szn', 'neverseas', 'dw cube', 'fishnet butt', 'newmark0g', 'beerrcules', 'dw mckean', 'dw cargo', 'joe exoti c', 'dw dougdabs', 'drynx', 'itskatiee', 'ythaar', 'brianisme', 'woodzer', 'vyck', 'mini soda', 'fun to kill', 'hello canada', 'keydiss', 'wana corp', 'freebird482', 'dw vurkzi', 'vyrusplays', 'lokeygarbage', 'custom', 'bokenboat', 'office hours'];
-let in_arr = ['Brett P'];
-
-//let arr=sendPlayerData(in_arr);
-//let arr = sendPlayerDataFake(in_arr);
-//let r = 2;
-//let n = arr.length;
-
-//let player_avg = getPlayerAvg(arr);
-//console.log(player_avg);
-
 createPVMSliders(pvm_scale2);
 initUserList(5);
 
@@ -557,12 +426,12 @@ function getButtonTeams() {
 	//Use for real Data
 	disableCreate(document.getElementById('createButton'), 60);
 	sendPlayerDataPromise(getPlayerNames()).then(value => {
-		if (value[0] == 1) {
+		if (value.length > 0) {
 			document.getElementById("infoPanel").innerHTML = "Players successfully loaded!";
 			let pvm_weights = createWeightObj();
 			let numTeams = document.getElementById("teamSizeSelect").value;
-			let sortedPlayers = sortPlayers(value[2], pvm_weights);
-			console.log(sortedPlayers);
+			let sortedPlayers = sortPlayers(value, pvm_weights);
+			//console.log(sortedPlayers);
 			let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
 			createFinalTeamTable(teams);
 		}
@@ -572,20 +441,6 @@ function getButtonTeams() {
 		
 	}).catch(e => console.log(e));
 	
-	
-	
 }
-
-//printCombination(arr, n, r);
-//console.log(sortPlayers(arr));
-//console.log(sortTeams(teamList));
-//pickTeamsRR(sortPlayers(arr), 10);
-//let sortedPlayers = sortPlayers(arr);
-//console.log(sortedPlayers);
-//pickTeamsBucketSort(sortedPlayers, 4);
-//pickTeamsRRPlus(sortedPlayers, 10);
-
-//pickTeams(sortTeams(teamList), ['dw guns', 'denglish', 'dr moko', 'brett p', 'bape szn', 'neverseas', 'dw cube', 'fishnet butt', 'newmark0g', 'beerrcules', 'dw mckean', 'dw cargo', 'joe exoti c', 'dw dougdabs', 'drynx', 'itskatiee', 'ythaar', 'brianisme', 'woodzer', 'vyck', 'mini soda', 'fun to kill', 'hello canada', 'keydiss', 'wana corp', 'freebird482', 'dw vurkzi', 'vyrusplays', 'lokeygarbage', 'custom']);
-
 
 
