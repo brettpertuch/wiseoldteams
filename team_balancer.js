@@ -94,7 +94,7 @@ function sendPlayerDataFake(playerList) {
 }
 
 
-function createFinalTeamTable(teams) {
+function createFinalTeamTable(teams, showScores) {
 	//let teams = teams.slice();
 	//console.log(teams);
 	let table = document.getElementById("finalTeamTable");
@@ -112,13 +112,27 @@ function createFinalTeamTable(teams) {
 		for (let j = 0; j < teams.length; j++) {
 			let newCol = document.createElement("td");
 			newCol.className = "teamTableCell";
-			if (teams[j].players[i] != undefined)
-				newCol.innerHTML = teams[j].players[i];
+			if (teams[j].players[i] != undefined) {
+				if (showScores)
+					newCol.innerHTML = teams[j].players[i][0] + " (" + teams[j].players[i][1].toFixed(2) + " pts.)";
+				else
+					newCol.innerHTML = teams[j].players[i][0];
+			}
+			else
+				newCol.innerHTML = "";
 			newRow.appendChild(newCol);
 		}
 		table.appendChild(newRow);
 	}
-	
+	if (showScores) {
+		let newRow = document.createElement("tr");
+		for (let j = 0; j < teams.length; j++) {
+			let newCol = document.createElement("td");
+			newCol.innerHTML = "Total Score = " + teams[j].score.toFixed(2) + " pts.";
+			newRow.appendChild(newCol);
+		}
+		table.appendChild(newRow);
+	}
 }
 
 function getLongestTeam(teams) {
@@ -266,6 +280,17 @@ function initUserList(amt) {
 		createUserInput();
 }
 
+
+function toggleScore(teams) {
+	let val = document.getElementById("showScoreCheck").checked;
+	console.log(val);
+	if (teams.length > 0) {
+		console.log(teams);
+		createFinalTeamTable(teams, val);
+	}
+}
+
+
 function removeUserInput(id) {
 	document.getElementById(id).remove();
 	createTeamDropdown();
@@ -384,12 +409,15 @@ function pickTeamsBucketSort(sortedPlayers, num_teams) {
 		final_teams[i] = {players:[], score:0};
 	for (let i = 0; i < sortedPlayers.length; i++) {
 		if (i < num_teams) {
-			final_teams[i].players.push(sortedPlayers[i].name);
+			//console.log(sortedPlayers[i].name);
+			final_teams[i].players.push([sortedPlayers[i].name, sortedPlayers[i].tot_score]);
 			final_teams[i].score += sortedPlayers[i].tot_score;
 		}
 		else {
-			final_teams[getNextBucket(final_teams, teamSize)].players.push(sortedPlayers[i].name);
-			final_teams[getNextBucket(final_teams, teamSize)].score += sortedPlayers[i].tot_score;
+			//console.log(sortedPlayers[i].name);
+			let nextIndex = getNextBucket(final_teams, teamSize);
+			final_teams[nextIndex].players.push([sortedPlayers[i].name, sortedPlayers[i].tot_score]);
+			final_teams[nextIndex].score += sortedPlayers[i].tot_score;
 		}
 	}
 	//console.log(final_teams);
@@ -409,6 +437,11 @@ function getPlayerAvg(players) {
 createPVMSliders(pvm_scale2);
 initUserList(10);
 
+var teams = [];
+document.getElementById("showScoreCheck").addEventListener("input", function() {
+	toggleScore(teams);
+});
+
 function getButtonTeams() {
 	
 	//Use for fake data
@@ -425,19 +458,20 @@ function getButtonTeams() {
 	
 	
 	//Use for real Data
-	disableCreate(document.getElementById('createButton'), 60);
 	sendPlayerDataPromise(getPlayerNames()).then(value => {
+		disableCreate(document.getElementById('createButton'), 60);
 		if (value.length > 0) {
 			document.getElementById("infoPanel").innerHTML = "Players successfully loaded!";
 			let pvm_weights = createWeightObj();
 			let numTeams = document.getElementById("teamSizeSelect").value;
 			let sortedPlayers = sortPlayers(value, pvm_weights);
 			//console.log(sortedPlayers);
-			let teams = pickTeamsBucketSort(sortedPlayers, numTeams);
-			createFinalTeamTable(teams);
+			teams = pickTeamsBucketSort(sortedPlayers, numTeams);
+			let scoresToggled = document.getElementById("showScoreCheck").checked;
+			createFinalTeamTable(teams, scoresToggled);
 		}
 		else {
-			document.getElementById("infoPanel").innerHTML = "Process failed!";
+			document.getElementById("infoPanel").innerHTML = "Process failed! Either usernames were not found or server is overloaded.";
 		}
 		
 	}).catch(e => console.log(e));

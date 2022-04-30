@@ -66,6 +66,11 @@ table, th, td {
 	padding: 5px;
 	font-size: 20px;
 }
+.createTeamButton:disabled {
+	border: 1px solid #999999;
+	background-color: #cccccc;
+	color: #666666;
+}
 
 </style>
 <body>
@@ -93,6 +98,8 @@ table, th, td {
 				<select name="teamSizeSelect" id="teamSizeSelect">
 					<option value="1">1</option>
 				</select>
+				<input type="checkbox" id="showScoreCheck">
+				<label for="showScoreCheck">Show Scores</label>
 				<!--<table id="teamNameTable"></table>-->
 				<table id="finalTeamTable" class="teamTable"></table>
 			</td>
