@@ -2,43 +2,37 @@
 <html>
 <head>
 	<title>Wise Old Teams</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 </head>
 <style>
+body {
+	background-color: #c9c9c9;
+	font-family: 'Varela Round', sans-serif;
+}
 .playerContainer {
-	background-color: #FFFFFF;
-	//padding: 10px;
-	//height: 500px;
+	background-color: #f0f0f0;
 	overflow: scroll;
 }
 .playerTextBox {
 	font-size: 20px;
-	background-color: #e9f5f9;
+	background-color: #f0f0f0;
 	margin: 2px 0px 2px 0px;
-	//border: 1px solid #000000;
 	border-top: 1px solid #000000;
 	border-bottom: 1px solid #000000;
 	border-right: 1px solid #000000;
 	border-left: 0px;
-	//border-width: 0px;
-	//height: 25px;
-	//display: inline-block;
-	//line-height: 1.5
 }
 .playerRemoveButton {
-	background-color: #2596be;
+	background-color: #1abc9c;
 	margin: 2px 0px 2px 0px;
-	//border-width: 0px;
-	//border: none;
 	border: 1px solid #000000;
 	color: white;
-	//height: 30px;
-	//text-align: center;
-	//text-decoration: none;
-	//display: inline-block;
 	font-size: 20px;
-	//line-height: 1.5
 }
 table, th, td {
+	background-color: #f0f0f0;
 	border:1px solid black;
 	border-collapse: collapse;
 	padding: 5px;
@@ -57,6 +51,21 @@ table, th, td {
 .teamTable {
 	//margin-bottom: 456px;
 }
+.weightSlider {
+	-webkit-appearance: none;
+	border-radius: 15px;
+	accent-color: #1abc9c;
+	background: #d3d3d3;
+}
+.addPlayerButton, .createTeamButton {
+	font-family: 'Varela Round', sans-serif;
+	background-color: #1abc9c;
+	color: white;
+	border-radius: 0;
+	border: 1px solid #000000;
+	padding: 5px;
+	font-size: 20px;
+}
 
 </style>
 <body>
@@ -68,13 +77,14 @@ table, th, td {
 		<tr>
 			<td>
 				<h3>Player Entries</h3>
-				<p>Ensure to enter the players' exact username</p>
+				<p>Ensure to enter the player's exact username</p>
 				<div id="playerContainer" class=playerContainer></div>
-				<button onclick="createUserInput()">Add Player</button>
+				<button class="addPlayerButton" onclick="createUserInput()">Add Player</button>
 			</td>
 			<td>
 				<h3>Activity Weighting</h3>
-				<p>Use the sliders to make certain activities matter more or less in team creation.</p>
+				<p>Use the sliders to make certain activities matter more or less</p>
+				<p>(0 = not used, 1 = full score) in team creation.</p>
 				<table id="sliderContainer"></table>
 			</td>
 			<td>
@@ -89,7 +99,7 @@ table, th, td {
 		</tr>
 		<tr>
 			<td colspan="3">
-				<button id="createButton" onclick="getButtonTeams()">Create Teams</button>
+				<button class="createTeamButton" id="createButton" onclick="getButtonTeams()">Create Teams</button>
 				<label id="infoPanel"></label>
 			</td>
 		</tr>

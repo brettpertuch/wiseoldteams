@@ -149,7 +149,8 @@ function createPVMSliders(pvm_obj) {
 		slider.setAttribute("min", "0");
 		slider.setAttribute("max", "100");
 		slider.setAttribute("value", "100");
-		slider.addEventListener("change", function() {
+		slider.className = "weightSlider";
+		slider.addEventListener("input", function() {
 			updateSliderVal(slider.id.split("-")[0]);
 		});
 		let valLabel = document.createElement("input");
@@ -349,7 +350,7 @@ function getSmallestBucket(buckets, teamSize) {
 	let smallestIndex = 0;
 	let smallestAmt = Number.MAX_SAFE_INTEGER;
 	for (let i = 0; i < buckets.length; i++) {
-		if (buckets[i].players.length == teamSize)
+		if (buckets[i].players.length >= teamSize)
 			continue;
 		if (buckets[i].score < smallestAmt) {
 			smallestAmt = buckets[i].score;
@@ -378,7 +379,7 @@ function getNextBucket(buckets, teamSize) {
 
 function pickTeamsBucketSort(sortedPlayers, num_teams) {
 	let final_teams = [];
-	let teamSize = Math.min(sortedPlayers.length / num_teams);
+	let teamSize = Math.max(sortedPlayers.length / num_teams);
 	for (let i = 0; i < num_teams; i++)
 		final_teams[i] = {players:[], score:0};
 	for (let i = 0; i < sortedPlayers.length; i++) {
@@ -406,7 +407,7 @@ function getPlayerAvg(players) {
 
 
 createPVMSliders(pvm_scale2);
-initUserList(5);
+initUserList(10);
 
 function getButtonTeams() {
 	
