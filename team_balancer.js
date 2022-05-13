@@ -827,6 +827,10 @@ function createErrorTable(errors, target) {
 	}
 }
 
+function copyTableToClipboard() {
+	html2canvas(document.getElementById("finalTeamTable")).then(canvas => canvas.toBlob(blob => navigator.clipboard.write([new ClipboardItem({'image/png': blob})])));
+}
+
 
 showActiveInputType(getSelectedInputType());
 createPVMSliders(pvm_scale2);
