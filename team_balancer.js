@@ -9,7 +9,7 @@ function playerInPlayers(player, players) {
 	return -1;
 }
 
-async function sendPlayerDataPromise(playerList, players) {
+/*async function sendPlayerDataPromise(playerList, players) {
 	var promises = [];
 	for (player in playerList) {
 		//console.log(playerList[player]);
@@ -30,11 +30,13 @@ async function sendPlayerDataPromise(playerList, players) {
 							let res = JSON.parse(xhr.responseText);
 							return resolve(createPlayerObj(username, res));
 						}
-						else
-							return reject("Error: " + JSON.parse(xhr.responseText).message);	
+						else {
+							//console.log(playerList[player]);
+							return reject("Error: " + JSON.parse(xhr.responseText).message + playerList[player]);
+						}
 					}
 				}
-			}).catch(err => {console.log(err)});
+			});
 			
 			xhr.send(data);
 			promises.push(promise);
@@ -48,6 +50,49 @@ async function sendPlayerDataPromise(playerList, players) {
 		}
 	}
 	return await Promise.all(promises).then(r => r).catch(error => {return {"code":-1, "msg":error}});
+}*/
+
+async function sendPlayerDataPromise(playerList, players) {
+	var promises = [];
+	document.getElementById("infoPanel").innerHTML = "Loading Players...";
+	for (player in playerList) {
+		//console.log(playerList[player]);
+		let foundPlayerIndex = playerInPlayers(playerList[player], players);
+		//console.log(foundPlayerIndex);
+		if (foundPlayerIndex == -1) {
+			let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", api_url);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			const promise = new Promise((resolve, reject) => {
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState === 4) {
+						if ([200, 201].includes(xhr.status)) {
+							let username = JSON.parse(xhr.responseText).displayName;
+							let res = JSON.parse(xhr.responseText);
+							return resolve({"code":1, "obj":createPlayerObj(username, res)});
+						}
+						else {
+							//console.log(playerList[player]);
+							//return reject("Error: " + JSON.parse(xhr.responseText).message + playerList[player]);
+							return resolve({"code":-1, "err":JSON.parse(xhr.responseText)});
+						}
+					}
+				}
+			});
+			
+			xhr.send(data);
+			promises.push(promise);
+		}
+		else {
+			//console.log("player was found");
+			const promise = new Promise((resolve, reject) => {
+				resolve(players[foundPlayerIndex]);
+			});
+			promises.push(promise);
+		}
+	}
+	return await Promise.all(promises).then(r => r);
 }
 
 
@@ -116,7 +161,8 @@ function createFinalTeamTable(teams, showScores) {
 	let copied_teams = JSON.parse(JSON.stringify(teams));
 	if (!showScores) {
 		for (team in copied_teams) {
-			copied_teams[team].players = shuffle(copied_teams[team].players);
+			//copied_teams[team].players = shuffle(copied_teams[team].players);
+			copied_teams[team].players = copied_teams[team].players.sort(function (a, b) {return a[0].toLowerCase().localeCompare(b[0].toLowerCase());});
 		}
 	}
 	let table = document.getElementById("finalTeamTable");
@@ -349,13 +395,32 @@ function getTextInputData() {
 	let names = text.split("\n")
 	let final_names = [];
 	for (name in names) {
-		if (names[name] != "")
+		if (names[name] != "" && !final_names.includes(names[name].trim().toLowerCase()))
 			final_names.push(names[name].trim());
 		
 	}
 	//console.log(text.split("\n"));
 	//console.log(final_names);
 	return final_names;
+	
+}
+
+function importFromText() {
+	let names = getTextInputData();
+	let current_names = getPlayerNames()[0];
+	let new_arr = current_names.concat(names);
+	new_arr = [...new Set([...current_names, ...names])]
+	let elements = document.getElementsByName("usernameInput");
+	if (names.length > 0) {
+		for (let i = 0; i < new_arr.length; i++) {
+			if (elements.length - 1 < i) {
+				createUserInput();
+				elements = document.getElementsByName("usernameInput");
+			}
+			elements[i].value = new_arr[i];
+		}
+		document.getElementById("playerTextInput").value = "";
+	}
 	
 }
 
@@ -426,14 +491,14 @@ function getPlayerNames() {
 	names = [];
 	bonuses = [];
 	for (i = 0; i < elements.length; i++) {
-		if (elements[i].value != "") {
+		if (elements[i].value != "" && !names.includes(elements[i].value.trim().toLowerCase())) {
 			let bonus_obj = {"has_scy":false, "has_tbow":false};
 			if (scy_checks[i].checked)
 				bonus_obj.has_scy = true;
 			if (tbow_checks[i].checked)
 				bonus_obj.has_tbow = true;
 			bonuses.push(bonus_obj);
-			names.push(elements[i].value.toLowerCase());
+			names.push(elements[i].value.trim().toLowerCase());
 		}
 	}
 	//console.log(names);
@@ -756,6 +821,12 @@ function getPlayerAvg(players) {
 	return avg_score;
 }
 
+function createErrorTable(errors, target) {
+	for (let i = 0; i < errors.length; i++) {
+		target.innerHTML += '<p>' + errors[i].message + '</p>';
+	}
+}
+
 
 showActiveInputType(getSelectedInputType());
 createPVMSliders(pvm_scale2);
@@ -793,6 +864,37 @@ function getButtonTeams() {
 	
 	
 	//Use for real Data
+	/*let playerNames = [];
+	let bonuses = [];
+	if (getSelectedInputType() == 1) {
+		let playerData = getPlayerNames();
+		playerNames = playerData[0];
+		bonuses = playerData[1];
+	}
+	else
+		playerNames = getTextInputData();
+	sendPlayerDataPromise(playerNames, players).then(value => {
+		//console.log(value);
+		disableCreate(document.getElementById('createButton'), 45);
+		let pvm_weights = createWeightObj();
+		let numTeams = document.getElementById("teamSizeSelect").value;
+		let scoresToggled = document.getElementById("showScoreCheck").checked;
+		if (Array.isArray(value)) {
+			document.getElementById("infoPanel").innerHTML = "Players successfully loaded!";
+			players = value;
+			let sortedPlayers = sortPlayers(players, pvm_weights, bonuses);
+			teams = pickTeamsBucketSort(sortedPlayers, numTeams);
+			createFinalTeamTable(teams, scoresToggled);
+		}
+		else {
+			document.getElementById("infoPanel").innerHTML = value.msg;
+		}
+	}).catch(e => {
+	console.log(e);
+	document.getElementById("infoPanel").innerHTML = "Error: Something bad happened. Please check the console.";
+	});*/
+	
+	//Use for real Data
 	let playerNames = [];
 	let bonuses = [];
 	if (getSelectedInputType() == 1) {
@@ -802,23 +904,32 @@ function getButtonTeams() {
 	}
 	else
 		playerNames = getTextInputData();
-		sendPlayerDataPromise(playerNames, players).then(value => {
-			//console.log(value);
-			disableCreate(document.getElementById('createButton'), 45);
-			let pvm_weights = createWeightObj();
-			let numTeams = document.getElementById("teamSizeSelect").value;
-			let scoresToggled = document.getElementById("showScoreCheck").checked;
-			if (Array.isArray(value)) {
-				document.getElementById("infoPanel").innerHTML = "Players successfully loaded!";
-				players = value;
-				let sortedPlayers = sortPlayers(players, pvm_weights, bonuses);
-				teams = pickTeamsBucketSort(sortedPlayers, numTeams);
-				createFinalTeamTable(teams, scoresToggled);
-			}
-			else {
-				document.getElementById("infoPanel").innerHTML = value.msg;
-			}
-		}).catch(e => {
+	sendPlayerDataPromise(playerNames, players).then(value => {
+		document.getElementById("infoPanel").innerHTML = "Done loading.";
+		//console.log(value);
+		disableCreate(document.getElementById('createButton'), 45);
+		let pvm_weights = createWeightObj();
+		let numTeams = document.getElementById("teamSizeSelect").value;
+		let scoresToggled = document.getElementById("showScoreCheck").checked;
+		
+		let final_errors = [];
+		let final_players = [];
+		for (let i = 0; i < value.length; i++) {
+			if (value[i].code == 1)
+				final_players.push(value[i].obj);
+			else
+				final_errors.push(value[i].err);
+		}
+		
+		let sortedPlayers = sortPlayers(final_players, pvm_weights, bonuses);
+		teams = pickTeamsBucketSort(sortedPlayers, numTeams);
+		createFinalTeamTable(teams, scoresToggled);
+		for (let i = 0; i < final_errors.length; i++)
+			console.log(final_errors[i]);
+		createErrorTable(final_errors, document.getElementById("infoPanel"));
+		
+		
+	}).catch(e => {
 		console.log(e);
 		document.getElementById("infoPanel").innerHTML = "Error: Something bad happened. Please check the console.";
 	});

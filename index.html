@@ -62,7 +62,7 @@ th {
 	accent-color: #1abc9c;
 	background: #d3d3d3;
 }
-.addPlayerButton, .createTeamButton {
+.addPlayerButton, .createTeamButton, .importTextButton {
 	font-family: 'Varela Round', sans-serif;
 	background-color: #1abc9c;
 	color: white;
@@ -95,7 +95,9 @@ th {
 				<input type="radio" id="playerInputText" name="playerInputType" value=2>
 				<label for="playerInputText">Text Entry</label>
 				<p>Ensure to enter the player's exact username</p>
-				<div id="playerContainer" class=playerContainer></div>
+				<div id="playerContainer" class=playerContainer>
+					<button class="importTextButton" onclick="importFromText()">Import from text</button>
+				</div>
 				<div id="playerContainer2" class=playerContainer>
 					<textarea id="playerTextInput" class="playerTextInput" rows="25" cols="25" spellcheck="false"></textarea>
 				</div>
