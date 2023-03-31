@@ -79,6 +79,9 @@ th {
 .playerTextInput {
 	resize: none;
 }
+.sliderContainer {
+	overflow-y: scroll;
+}
 
 </style>
 <body>
@@ -105,13 +108,12 @@ th {
 			</td>
 			<td>
 				<h3>Activity Weighting</h3>
-				<p>Use the sliders to make certain activities matter more or less</p>
-				<p>(0 = not used, 1 = full score) in team creation.</p>
+				<p>Only checked items will factor into score</p>
 				<table id="sliderContainer"></table>
 			</td>
 			<td>
 				<h3>Final Teams</h3>
-				<label for="cteamSizeSelect"># of Teams:</label>
+				<label for="teamSizeSelect"># of Teams:</label>
 				<select name="teamSizeSelect" id="teamSizeSelect">
 					<option value="1">1</option>
 				</select>

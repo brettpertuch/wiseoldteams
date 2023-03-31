@@ -1,4 +1,4 @@
-var api_url = "https://api.wiseoldman.net/players/track";
+var api_url = "https://api.wiseoldman.net/v2/players/";
 let numUsers = 0;
 
 function playerInPlayers(player, players) {
@@ -20,7 +20,7 @@ function playerInPlayers(player, players) {
 			document.getElementById("infoPanel").innerHTML = "Loading Player (" + player.toString() + "/" + playerList.length.toString() + ")";
 			let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
 			let xhr = new XMLHttpRequest();
-			xhr.open("POST", api_url);
+			xhr.open("GET", api_url);
 			xhr.setRequestHeader("Content-Type", "application/json");
 			const promise = new Promise((resolve, reject) => {
 				xhr.onreadystatechange = function () {
@@ -52,7 +52,47 @@ function playerInPlayers(player, players) {
 	return await Promise.all(promises).then(r => r).catch(error => {return {"code":-1, "msg":error}});
 }*/
 
+
 async function sendPlayerDataPromise(playerList, players) {
+	var promises = [];
+	for (player in playerList) {
+		let foundPlayerIndex = playerInPlayers(playerList[player], players);
+		if (foundPlayerIndex == -1) {
+			let xhr = new XMLHttpRequest();
+			xhr.open("GET", api_url + playerList[player]);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			const promise = new Promise((resolve, reject) => {
+				xhr.onreadystatechange = function () {
+					if (xhr.readyState === 4) {
+						if ([200, 201].includes(xhr.status)) {
+							let username = JSON.parse(xhr.responseText).displayName;
+							let res = JSON.parse(xhr.responseText);
+							return resolve(createPlayerObj(username, res));
+						}
+						else {
+							//console.log(playerList[player]);
+							return reject("Error: " + JSON.parse(xhr.responseText).message + playerList[player]);
+						}
+					}
+				}
+			});
+			
+			xhr.send();
+			promises.push(promise);
+		}
+		else {
+			//console.log("player was found");
+			const promise = new Promise((resolve, reject) => {
+				resolve(players[foundPlayerIndex]);
+			});
+			promises.push(promise);
+		}
+	}
+	return await Promise.all(promises).then(r => r).catch(error => {return {"code":-1, "msg":error}});
+
+}
+
+/*async function sendPlayerDataPromise(playerList, players) {
 	var promises = [];
 	document.getElementById("infoPanel").innerHTML = "Loading Players...";
 	for (player in playerList) {
@@ -62,7 +102,7 @@ async function sendPlayerDataPromise(playerList, players) {
 		if (foundPlayerIndex == -1) {
 			let data = "{\"username\":" + "\"" +  playerList[player] + "\"" + "}";
 			let xhr = new XMLHttpRequest();
-			xhr.open("POST", api_url);
+			xhr.open("GET", api_url);
 			xhr.setRequestHeader("Content-Type", "application/json");
 			const promise = new Promise((resolve, reject) => {
 				xhr.onreadystatechange = function () {
@@ -93,24 +133,27 @@ async function sendPlayerDataPromise(playerList, players) {
 		}
 	}
 	return await Promise.all(promises).then(r => r);
-}
+}*/
 
 
 function createPlayerObj(player_name, response) {
 	jsonRes = response.latestSnapshot;
+	console.log(jsonRes);
 	const player = {
 		name: player_name
 	};
 	for (const key2 in pvm_scale2)
 		player[key2] = 0;
-	for (const key in jsonRes) {
+	for (const key in jsonRes.data.bosses) {
 		for (const key2 in pvm_scale2) {
 			//console.log(pvm_scale2[key2].bosses);
-			if (pvm_scale2[key2].bosses.includes(key))
-				player[key2] += jsonRes[key].ehb;
+			if (pvm_scale2[key2].bosses.includes(key)) {
+				console.log(jsonRes.data.bosses[key].ehb);
+				player[key2] += jsonRes.data.bosses[key].ehb;
+			}
 		}
 	}
-	player['ehp'] = jsonRes['ehp'].value;
+	player['ehp'] = jsonRes.data.computed['ehp'].value;
 	//console.log(player);
 	return player;
 }
@@ -157,6 +200,7 @@ function shuffle(arr) {
 	return arr;
 }
 
+
 function createFinalTeamTable(teams, showScores) {
 	let copied_teams = JSON.parse(JSON.stringify(teams));
 	if (!showScores) {
@@ -172,7 +216,7 @@ function createFinalTeamTable(teams, showScores) {
 	for (let i = 0; i < copied_teams.length; i++) {
 		let thisHeader = document.createElement("th");
 		thisHeader.className = "teamTableCell";
-		thisHeader.innerHTML = "Team " + (i + 1);
+		thisHeader.innerHTML = "Team " + String.fromCharCode(i + 65);
 		if (showScores)
 			thisHeader.setAttribute("colspan", "2");
 		headerRow.appendChild(thisHeader);
@@ -261,7 +305,11 @@ function createPVMSliders(pvm_obj) {
 		//console.log( Object.keys(pvm_obj).sort());
 		let row = document.createElement("tr");
 		let cell = document.createElement("td");
-		let slider = document.createElement("input");
+		let check = document.createElement("input");
+		check.setAttribute("type", "checkbox");
+		check.setAttribute("id", labels[index][0] + "-check");
+		check.setAttribute("checked", true);
+		/*let slider = document.createElement("input");
 		slider.setAttribute("id", labels[index][0] + "-slider");
 		slider.setAttribute("name", "pvmSlider");
 		slider.setAttribute("type", "range");
@@ -275,16 +323,18 @@ function createPVMSliders(pvm_obj) {
 		let valLabel = document.createElement("input");
 		valLabel.setAttribute("value", slider.value / 100);
 		valLabel.setAttribute("name", "pvmWeightVal");
-		valLabel.setAttribute("id", slider.id + "-valLabel");
+		//valLabel.setAttribute("id", slider.id + "-valLabel");
+		valLabel.setAttribute("id", check.id + "-valLabel");
 		valLabel.setAttribute("size", "1");
 		valLabel.addEventListener("change", function() {
 			updateSliderPos(valLabel.id.split("-")[0]);
-		});
+		});*/
 		let label = document.createElement("label");
-		label.setAttribute("for", slider.id);
+		label.setAttribute("for", check.id);
 		label.innerHTML = "&ensp;" + labels[index][1];
-		cell.appendChild(slider);
-		cell.appendChild(valLabel);
+		//cell.appendChild(slider);
+		//cell.appendChild(valLabel);
+		cell.appendChild(check);
 		cell.appendChild(label);
 		row.appendChild(cell);
 		container.appendChild(row);
@@ -297,6 +347,14 @@ function createPVMSliders(pvm_obj) {
 function updateSliderVal(id) {
 	let val = document.getElementById(id + "-slider").value;
 	document.getElementById(id + "-slider-valLabel").value = val / 100;
+}
+
+function getCheckVal(id) {
+	let val = document.getElementById(id + "-check").checked;
+	if (val)
+		return 1;
+	else
+		return 0;
 }
 
 function updateSliderPos(id) {
@@ -315,7 +373,8 @@ function createWeightObj() {
 	let vals = document.getElementsByName("pvmWeightVal");
 	let weightObj = {};
 	for (let i = 0; i < vals.length; i++) {
-		weightObj[vals[i].id.split("-")[0]] = parseFloat(vals[i].value);
+		//weightObj[vals[i].id.split("-")[0]] = parseFloat(vals[i].value);
+		weightObj[vals[i].id.split("-")[0]] = getCheckVal(vals[i].id);
 	}
 	return weightObj;
 }
@@ -455,10 +514,21 @@ function createUserInput() {
 	tbow_check.setAttribute("name", "tbow_check");
 	tbow_label.appendChild(tbow_img);
 	tbow_label.appendChild(tbow_check);
+	
+	let shadow_label = document.createElement("label");
+	let shadow_img = document.createElement("img");
+	shadow_img.src = "shadow_sprite.png"
+	let shadow_check = document.createElement("input");
+	shadow_check.setAttribute("type", "checkbox");
+	shadow_check.setAttribute("name", "shadow_check");
+	shadow_label.appendChild(shadow_img);
+	shadow_label.appendChild(shadow_check);
+	
 	playerDiv.appendChild(removeButton);
 	playerDiv.appendChild(input);
 	playerDiv.appendChild(scy_label);
 	playerDiv.appendChild(tbow_label);
+	playerDiv.appendChild(shadow_label);
 	document.getElementById("playerContainer").appendChild(playerDiv);
 	createTeamDropdown();
 	let scrollElement = document.getElementById("playerContainer");
@@ -488,15 +558,18 @@ function getPlayerNames() {
 	let elements = document.getElementsByName("usernameInput");
 	let scy_checks = document.getElementsByName("scy_check");
 	let tbow_checks = document.getElementsByName("tbow_check");
+	let shadow_checks = document.getElementsByName("shadow_check");
 	names = [];
 	bonuses = [];
 	for (i = 0; i < elements.length; i++) {
 		if (elements[i].value != "" && !names.includes(elements[i].value.trim().toLowerCase())) {
-			let bonus_obj = {"has_scy":false, "has_tbow":false};
+			let bonus_obj = {"has_scy":false, "has_tbow":false, "has_shadow":false};
 			if (scy_checks[i].checked)
 				bonus_obj.has_scy = true;
 			if (tbow_checks[i].checked)
 				bonus_obj.has_tbow = true;
+			if (shadow_checks[i].checked)
+				bonus_obj.has_shadow = true;
 			bonuses.push(bonus_obj);
 			names.push(elements[i].value.trim().toLowerCase());
 		}
@@ -563,14 +636,17 @@ function sortPlayers(players, weightObj, bonuses) {
 				if (key in weightObj) {
 					let scy_bonus = 0;
 					let tbow_bonus = 0;
+					let shadow_bonus = 0;
 					if (key in pvm_scale2) {
 						if (players[i].has_scy)
 							scy_bonus = pvm_scale2[key].scy_bonus;
 						if (players[i].has_tbow)
 							tbow_bonus = pvm_scale2[key].tbow_bonus;
+						if (players[i].has_shadow)
+							shadow_bonus = pvm_scale2[key].shadow_bonus;
 					}
 					let basePts = (players[i][key] / score_obj[key]);
-					tot += (basePts + (basePts * scy_bonus) + (basePts * tbow_bonus)) * weightObj[key];
+					tot += (basePts + (basePts * scy_bonus) + (basePts * tbow_bonus) + (basePts * shadow_bonus)) * weightObj[key];
 				}
 				else {
 					let scy_bonus = 0;
@@ -823,7 +899,8 @@ function getPlayerAvg(players) {
 
 function createErrorTable(errors, target) {
 	for (let i = 0; i < errors.length; i++) {
-		target.innerHTML += '<p>' + errors[i].message + '</p>';
+		console.log(errors[i]);
+		//target.innerHTML += '<p>' + errors[i].message + '</p>';
 	}
 }
 
@@ -909,6 +986,7 @@ function getButtonTeams() {
 	else
 		playerNames = getTextInputData();
 	sendPlayerDataPromise(playerNames, players).then(value => {
+		console.log(value);
 		document.getElementById("infoPanel").innerHTML = "Done loading.";
 		//console.log(value);
 		disableCreate(document.getElementById('createButton'), 45);
@@ -918,12 +996,14 @@ function getButtonTeams() {
 		
 		let final_errors = [];
 		let final_players = [];
-		for (let i = 0; i < value.length; i++) {
+		/*for (let i = 0; i < value.length; i++) {
 			if (value[i].code == 1)
 				final_players.push(value[i].obj);
 			else
 				final_errors.push(value[i].err);
-		}
+		}*/
+		
+		final_players = value;
 		
 		let sortedPlayers = sortPlayers(final_players, pvm_weights, bonuses);
 		teams = pickTeamsBucketSort(sortedPlayers, numTeams);
